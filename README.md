@@ -1,16 +1,32 @@
-## Hi there 👋
+# Hi, I'm Rob Saunders 👋
 
-<!--
-**rsaunders33/rsaunders33** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+## Senior Solutions Strategist & AI Leader
+A senior data, analytics, and AI leader with over 20 years of experience, specializing in leading data-driven transformations for global Fortune 500 enterprises.
 
-Here are some ideas to get you started:
+## Featured Projects & Thought Leadership
+A showcase of my community leadership, portfolio projects, and current learning in the data & AI space.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+### Community & Portfolio Work (from github.com/nerdywithdata)
+
+* [Author, Workout Wednesday (Official Site)](https://workout-wednesday.com/author/robsaunders/)
+  * Author of 9 official challenges for the Power BI community, focused on creative data storytelling and advanced analytics.
+
+* WorkoutWednesday-[Tableau](https://github.com/NerdyWithData/WorkoutWednesday-Tableau) & [PowerBI](https://github.com/NerdyWithData/WorkoutWednesday-PowerBI) Repos
+  * Participation in the weekly Tableau and Power BI community data visualization challenges.
+  * Over 100 challenges between the 2 repos
+
+* [TidyTuesday (R & Tidyverse)](https://github.com/NerdyWithData/tidytuesday/tree/master/2020w19%20-%20Animal%20Crossing)
+  * My repo for the TidyTuesday R community project, including an Animal Crossing chart that kicked off my interest in public data sharing.
+
+### Current Learning & Databricks Exploration (from this profile)
+
+* [MilwaukeeCrimeData (Databricks)](https://github.com/rsaunders33/MilwaukeeCrimeData)
+  * A current project to ingest and analyze Milwaukee crime data using Databricks.
+
+* [DataBricks-Experiments](https://github.com/rsaunders33/DataBricks-Experiments)
+  * My learning repo for hands-on Databricks work, including forked repositories and certification prep.
+
+### Core Competencies
+* Strategy: AI Strategy & Governance, Prototype-to-Production Roadmapping, Business Value Translation
+* Technical: Databricks (learning), GCP, Azure, Tableau, Power BI, SQL, Python, R
+* Leadership: Executive Relationship Management, Pre-Sales & Consulting, Change Management
