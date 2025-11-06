@@ -23,7 +23,7 @@ A showcase of my community leadership, portfolio projects, and current learning 
 * [MilwaukeeCrimeData (Databricks)](https://github.com/rsaunders33/MilwaukeeCrimeData)
   * A current project to ingest and analyze Milwaukee crime data using Databricks.
 
-* [DataBricks-Experiments](https://github.com/rsaunders33/DataBricks-Data-Engineer-Certification)
+* [DataBricks-Data-Engineer-Certification](https://github.com/rsaunders33/DataBricks-Data-Engineer-Certification)
   * My learning repo for hands-on Databricks work, including forked repositories and certification prep.
 
 ### Core Competencies
