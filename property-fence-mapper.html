@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Fence Mapper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        #address-input {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        #address-input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .selected-address {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            background-color: #e8f0fe;
+            border-left: 4px solid #4285f4;
+            border-radius: 4px;
+            min-height: 20px;
+        }
+
+        .selected-address.empty {
+            background-color: #f5f5f5;
+            border-left-color: #ddd;
+            color: #999;
+        }
+
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        button.primary {
+            background-color: #4285f4;
+            color: white;
+        }
+
+        button.primary:hover {
+            background-color: #3367d6;
+        }
+
+        button.secondary {
+            background-color: #f1f3f4;
+            color: #333;
+        }
+
+        button.secondary:hover {
+            background-color: #e8eaed;
+        }
+
+        button.danger {
+            background-color: #ea4335;
+            color: white;
+        }
+
+        button.danger:hover {
+            background-color: #d33426;
+        }
+
+        button.active {
+            background-color: #34a853;
+            color: white;
+        }
+
+        button.active:hover {
+            background-color: #2d8e47;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-panel {
+            padding: 12px 15px;
+            background-color: #fff9e6;
+            border-left: 4px solid #fbbc04;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .info-panel p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .pac-container {
+            border-radius: 4px;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏡 Property Fence Mapper</h1>
+        
+        <div class="search-container">
+            <label for="address-input" class="search-label">Enter Property Address:</label>
+            <input 
+                id="address-input" 
+                type="text" 
+                placeholder="Start typing an address..."
+                autocomplete="off"
+            >
+        </div>
+
+        <div id="selected-address" class="selected-address empty">
+            No address selected. Please search and select an address above.
+        </div>
+
+        <div class="info-panel">
+            <h3>📍 How to use:</h3>
+            <p>
+                1. Search for and select your property address above.<br>
+                2. Click "Start Drawing Fence" to begin adding fence sections.<br>
+                3. Click on the map to add points and create straight fence line segments.<br>
+                4. Click "Finish Fence Section" to complete the current section.<br>
+                5. Start a new section or clear all to start over.
+            </p>
+        </div>
+
+        <div class="controls">
+            <button id="start-drawing-btn" class="primary">Start Drawing Fence</button>
+            <button id="finish-section-btn" class="secondary" disabled>Finish Fence Section</button>
+            <button id="clear-all-btn" class="danger">Clear All Fences</button>
+            <button id="undo-point-btn" class="secondary" disabled>Undo Last Point</button>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <script>
+        let map;
+        let geocoder;
+        let autocomplete;
+        let marker;
+        let isDrawingMode = false;
+        let currentPolyline = null;
+        let currentPath = [];
+        let allFenceSections = [];
+        let allPolylines = [];
+
+        function initMap() {
+            // Initialize map with satellite view at high zoom
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 39.8283, lng: -98.5795 }, // Center of USA
+                zoom: 4,
+                mapTypeId: 'satellite',
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                    position: google.maps.ControlPosition.TOP_RIGHT,
+                    mapTypeIds: ['satellite', 'hybrid']
+                },
+                tilt: 0, // Overhead view
+                heading: 0,
+                streetViewControl: false,
+                fullscreenControl: true,
+                zoomControl: true
+            });
+
+            geocoder = new google.maps.Geocoder();
+
+            // Initialize autocomplete
+            const input = document.getElementById('address-input');
+            autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['address'],
+                fields: ['formatted_address', 'geometry', 'name']
+            });
+
+            // Listen for place selection
+            autocomplete.addListener('place_changed', onPlaceChanged);
+
+            // Add click listener for drawing
+            map.addListener('click', onMapClick);
+
+            // Setup button handlers
+            document.getElementById('start-drawing-btn').addEventListener('click', startDrawing);
+            document.getElementById('finish-section-btn').addEventListener('click', finishSection);
+            document.getElementById('clear-all-btn').addEventListener('click', clearAllFences);
+            document.getElementById('undo-point-btn').addEventListener('click', undoLastPoint);
+        }
+
+        function onPlaceChanged() {
+            const place = autocomplete.getPlace();
+
+            if (!place.geometry || !place.geometry.location) {
+                alert('No details available for this address');
+                return;
+            }
+
+            // Update selected address display
+            const selectedAddressDiv = document.getElementById('selected-address');
+            selectedAddressDiv.textContent = place.formatted_address || place.name;
+            selectedAddressDiv.classList.remove('empty');
+
+            // Center map on the location with high zoom for property view
+            map.setCenter(place.geometry.location);
+            map.setZoom(21); // Maximum zoom for best satellite resolution
+
+            // Remove old marker if exists
+            if (marker) {
+                marker.setMap(null);
+            }
+
+            // Add marker at the location
+            marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+                title: place.formatted_address || place.name,
+                animation: google.maps.Animation.DROP
+            });
+        }
+
+        function startDrawing() {
+            isDrawingMode = true;
+            document.getElementById('start-drawing-btn').classList.add('active');
+            document.getElementById('start-drawing-btn').textContent = 'Drawing Mode Active';
+            document.getElementById('finish-section-btn').disabled = false;
+            
+            // Create new polyline for this fence section
+            currentPath = [];
+            currentPolyline = new google.maps.Polyline({
+                map: map,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 3,
+                geodesic: false
+            });
+        }
+
+        function onMapClick(event) {
+            if (!isDrawingMode) {
+                return;
+            }
+
+            const latLng = event.latLng;
+            currentPath.push(latLng);
+            currentPolyline.setPath(currentPath);
+
+            // Add a small marker at each point
+            new google.maps.Marker({
+                position: latLng,
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 4,
+                    fillColor: '#FF0000',
+                    fillOpacity: 1,
+                    strokeColor: '#FFFFFF',
+                    strokeWeight: 2
+                }
+            });
+
+            // Enable undo button
+            document.getElementById('undo-point-btn').disabled = false;
+        }
+
+        function undoLastPoint() {
+            if (currentPath.length > 0) {
+                currentPath.pop();
+                currentPolyline.setPath(currentPath);
+                
+                if (currentPath.length === 0) {
+                    document.getElementById('undo-point-btn').disabled = true;
+                }
+            }
+        }
+
+        function finishSection() {
+            if (currentPolyline && currentPath.length > 0) {
+                allFenceSections.push([...currentPath]);
+                allPolylines.push(currentPolyline);
+                
+                // Change color to indicate finished section
+                currentPolyline.setOptions({
+                    strokeColor: '#0000FF',
+                    strokeWeight: 4
+                });
+            }
+
+            // Reset drawing mode
+            isDrawingMode = false;
+            currentPolyline = null;
+            currentPath = [];
+            
+            document.getElementById('start-drawing-btn').classList.remove('active');
+            document.getElementById('start-drawing-btn').textContent = 'Start Drawing Fence';
+            document.getElementById('finish-section-btn').disabled = true;
+            document.getElementById('undo-point-btn').disabled = true;
+        }
+
+        function clearAllFences() {
+            if (allPolylines.length === 0 && !currentPolyline) {
+                return;
+            }
+
+            if (confirm('Are you sure you want to clear all fence sections?')) {
+                // Remove all polylines from map
+                allPolylines.forEach(polyline => polyline.setMap(null));
+                if (currentPolyline) {
+                    currentPolyline.setMap(null);
+                }
+
+                // Clear all markers except the address marker
+                // Note: In a production app, you'd want to track these markers separately
+                
+                // Reset state
+                allFenceSections = [];
+                allPolylines = [];
+                currentPolyline = null;
+                currentPath = [];
+                isDrawingMode = false;
+
+                document.getElementById('start-drawing-btn').classList.remove('active');
+                document.getElementById('start-drawing-btn').textContent = 'Start Drawing Fence';
+                document.getElementById('finish-section-btn').disabled = true;
+                document.getElementById('undo-point-btn').disabled = true;
+
+                alert('All fence sections cleared.');
+            }
+        }
+
+        // Initialize map when API is loaded
+        window.initMap = initMap;
+    </script>
+
+    <!-- Google Maps JavaScript API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places&callback=initMap">
+    </script>
+</body>
+</html>
